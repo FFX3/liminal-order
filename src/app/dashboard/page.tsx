@@ -1,5 +1,6 @@
 "use client"
 import { useSearchParams } from "next/navigation"
+import { Suspense } from "react";
 import useSWR from "swr";
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
@@ -58,12 +59,14 @@ function CharacterPortrait(props: { size: 64 | 128 | 256 | 512 }) {
     if(!portrait) {
         return <div style={{ width: props.size, height: props.size }} />
     }
+
     const keyMapping = {
-        128: "px128x128" as "px128x128",
-        256: "px256x256" as "px256x256",
-        512: "px512x512" as "px512x512",
-        64: "px64x64" as "px64x64"
-    }
+        128: "px128x128",
+        256: "px256x256",
+        512: "px512x512",
+        64: "px64x64"
+    } as const
+
     return <div style={{ width: props.size, height: props.size }} >
         <img
             aria-hidden
@@ -77,8 +80,10 @@ function CharacterPortrait(props: { size: 64 | 128 | 256 | 512 }) {
 
 export default function Dashboard() {
     return <main>
-        <CharacterPortrait size={512} />
-        <EsiTokenData />
+        <Suspense>
+            <CharacterPortrait size={512} />
+            <EsiTokenData />
+        </Suspense>
     </main>
 
 }
