@@ -4,7 +4,9 @@ const redirect_uri = "https://wwubrvsbuhzlpymjgjvw.supabase.co/functions/v1/eve-
 const client_id = "72743549513a4d14a7a37102d468ae0c"
 
 export default function Home() {
-  const state = "bingo"
+  const state = JSON.stringify({
+    app_url: process.env.NEXT_PUBLIC_APP_URL
+  })
   return (
     <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
