@@ -1,8 +1,16 @@
 <script>
   import { portraitStore } from "$lib/stores/portrait";
 
-  /** @type {{size: 64 | 128 | 256 | 512}} */
-  let { size } = $props();
+  /** @typedef {Object} Props
+   * @property {64 | 128 | 256 | 512} size 
+   * @property {string} character_id 
+   */
+
+  /** @type Props*/
+  let { 
+    size,
+    character_id
+  } = $props();
 
   /** @typedef {"px64x64" | "px128x128" | "px256x256" | "px512x512"} PortraitKey */
   /** @type {Record<64 | 128 | 256 | 512, PortraitKey>} */
@@ -12,17 +20,26 @@
     512: "px512x512",
     64: "px64x64"
   };
+
+  /** @type import("$lib/stores/portrait").PortraitInput */
+  let inputs = {
+    character_id
+  }
+
+  // subscribe to slice for this character
+  const portraitSlice = portraitStore.select(inputs);
+
 </script>
 
-{#if $portraitStore.loading}
+{#if $portraitSlice.loading}
   <div style="width: {size}px; height: {size}px"></div>
-{:else if $portraitStore.error}
+{:else if $portraitSlice.error}
   <div style="width: {size}px; height: {size}px">
-    <p>Something went wrong: {$portraitStore.error.message}</p>
+    <p>Something went wrong: {$portraitSlice.error.message}</p>
   </div>
-{:else if $portraitStore.data}
+{:else if $portraitSlice.data}
   <img
-    src={$portraitStore.data[keyMapping[size]]}
+    src={$portraitSlice.data[keyMapping[size]]}
     alt="Character portrait"
     width={size}
     height={size}

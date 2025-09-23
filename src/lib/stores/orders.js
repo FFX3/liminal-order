@@ -19,11 +19,13 @@ import { createEsiEndpointStore } from "./createEsiEndpointStore";
  * @property {number} volume_total
  */
 
-/** 
- * @type {{
- *   subscribe: import("svelte/store").Readable<{ data: Order[] | null, loading: boolean, error: Error | null }>["subscribe"],
- *   fetchData: () => Promise<void>
- * }}
+/** @typedef {Object} OrderInput
+ * @property {string} character_id
  */
 
-export const ordersStore = createEsiEndpointStore("/characters/{id}/orders/");
+/** @type {import("$lib/stores/createEsiEndpointStore").EsiEndpointStore<OrderInput, Order[]>} */
+export const ordersStore = createEsiEndpointStore(
+    (input)=>`/characters/${input.character_id}/orders/`,
+    undefined,
+    20
+);

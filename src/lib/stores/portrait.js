@@ -8,5 +8,11 @@ import { createEsiEndpointStore } from "./createEsiEndpointStore";
  * @property {string} px512x512
  */
 
-/** @type {ReturnType<typeof createEsiEndpointStore<PortraitUrls>>} */
-export const portraitStore = createEsiEndpointStore("/characters/{id}/portrait/");
+/** @typedef {Object} PortraitInput
+ * @property {string} character_id
+ */
+
+/** @type {import("$lib/stores/createEsiEndpointStore").EsiEndpointStore<PortraitInput, PortraitUrls>} */
+export const portraitStore = createEsiEndpointStore(
+    (input)=>`/characters/${input.character_id}/portrait/`
+);
