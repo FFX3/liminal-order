@@ -1,5 +1,5 @@
 // src/lib/stores/esi.js
-import { writable } from "svelte/store";
+import { get, writable } from "svelte/store";
 
 /**
  * @typedef {Object} Character
@@ -8,31 +8,109 @@ import { writable } from "svelte/store";
  */
 
 /**
+ * @typedef {Object} CharacterAuth
+ * @property {Character} character
+ * @property {string} jwt
+ * @property {number} expires_at - Unix timestamp when JWT expires
+ */
+
+/**
  * @typedef {Object} EsiState
- * @property {Character | null} character
- * @property {string | null} jwt
+ * @property {Record<string, CharacterAuth>} characters - Map of character_id -> auth data
+ * @property {string | null} active_character_id - Currently selected character
  */
 
 function createEsiStore() {
   /** @type {import("svelte/store").Writable<EsiState>} */
-  const { subscribe, set } = writable({
-    character: null,
-    jwt: null
+  const { subscribe, update, set } = writable({
+    characters: {},
+    active_character_id: null
   });
 
   return {
     subscribe,
 
     /**
+     * Add or update authentication for a character
      * @param {string} jwt
      * @param {Character} character
+     * @param {number} expires_at - Unix timestamp when JWT expires
      */
-    setAuth(jwt, character) {
-      set({ jwt, character });
+    setCharacterAuth(jwt, character, expires_at) {
+      update(state => ({
+        ...state,
+        characters: {
+          ...state.characters,
+          [character.id]: { jwt, character, expires_at }
+        },
+        // Set as active if it's the first character or no active character
+        active_character_id: state.active_character_id || character.id
+      }));
     },
 
-    clearAuth() {
-      set({ jwt: null, character: null });
+    /**
+     * Remove a character's authentication
+     * @param {string} character_id
+     */
+    removeCharacterAuth(character_id) {
+      update(state => {
+        const newCharacters = { ...state.characters };
+        delete newCharacters[character_id];
+        
+        // If removing active character, switch to another one or null
+        const newActiveId = state.active_character_id === character_id
+          ? Object.keys(newCharacters)[0] || null
+          : state.active_character_id;
+
+        return {
+          characters: newCharacters,
+          active_character_id: newActiveId
+        };
+      });
+    },
+
+    /**
+     * Set the active character
+     * @param {string | null} character_id
+     */
+    setActiveCharacter(character_id) {
+      update(state => ({
+        ...state,
+        active_character_id: character_id
+      }));
+    },
+
+    /**
+     * Get JWT for a specific character
+     * @param {string} character_id
+     * @returns {string | null}
+     */
+    getJwtForCharacter(character_id) {
+      const state = get({ subscribe });
+      const auth = state.characters[character_id];
+      
+      // Check if JWT is expired
+      if (auth && auth.expires_at > Date.now() / 1000) {
+        return auth.jwt;
+      }
+      return null;
+    },
+
+    /**
+     * Get JWT for the active character
+     * @returns {string | null}
+     */
+    getActiveJwt() {
+      const state = get({ subscribe });
+      if (!state.active_character_id) return null;
+      return this.getJwtForCharacter(state.active_character_id);
+    },
+
+    /**
+     * Clear all authentication data
+     */
+    clearAll() {
+      set({ characters: {}, active_character_id: null });
     }
   };
 }

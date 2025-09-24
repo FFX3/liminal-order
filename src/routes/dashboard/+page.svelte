@@ -5,9 +5,9 @@
 	import { esiStore } from "$lib/stores/esi";
 </script>
 
-{#if $esiStore.character }
-	<Portrait size={64} character_id={$esiStore.character.id} />
-	<Orders character_id={$esiStore.character.id} />
+{#if $esiStore.active_character_id }
+	<Portrait size={64} character_id={$esiStore.active_character_id} />
+	<Orders character_id={$esiStore.active_character_id} />
 {/if}
 
 <Portrait size={64} character_id={"96501810"} /> <!-- Endo Tzu -->

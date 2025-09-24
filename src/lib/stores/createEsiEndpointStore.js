@@ -130,7 +130,7 @@ export function createEsiEndpointStore(consumer, transform, cacheMinutes = 60) {
  * @returns {Promise<T>}
  */
 async function fetchData(consumer, inputs, transform) {
-  const { jwt } = get(esiStore);
+  const jwt = esiStore.getActiveJwt();
 
   if (!jwt) {
     throw new Error("Trying to fetch with no session");

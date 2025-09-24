@@ -18,3 +18,20 @@ export function extractCharacterInfo(parsedJWT) {
         name: parsedJWT.name
     }
 }
+
+/**
+ * @param {{ exp: number }} parsedJWT
+ * @returns {number}
+ */
+export function extractExpiration(parsedJWT) {
+    return parsedJWT.exp
+}
+
+/**
+ * 
+ * @param {string} esiTokenData 
+ * @returns {string}
+ */
+export function getAccessTokenFromEsiTokenData(esiTokenData) {
+    return JSON.parse(esiTokenData).access_token
+}

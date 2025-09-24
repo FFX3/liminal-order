@@ -1,6 +1,6 @@
 // src/lib/auth/initEsi.js
 import { esiStore } from "$lib/stores/esi";
-import { parseJwt, extractCharacterInfo } from "$lib/auth/utils"; 
+import { parseJwt, extractCharacterInfo, extractExpiration, getAccessTokenFromEsiTokenData } from "$lib/auth/utils"; 
 
 /**
  * Initialize ESI state from URL hash (after SSO redirect)
@@ -17,8 +17,11 @@ export function initEsi() {
     const esiTokenData = decodeURIComponent(match[1]);
 
     const parsed = parseJwt(esiTokenData);
-    const character = extractCharacterInfo(parsed);
-    esiStore.setAuth(JSON.parse(esiTokenData).access_token, character);
+    esiStore.setCharacterAuth(
+      getAccessTokenFromEsiTokenData(esiTokenData), 
+      extractCharacterInfo(parsed),
+      extractExpiration(parsed)
+    );
 
     localStorage.setItem("esiTokenData", esiTokenData);
 
@@ -39,7 +42,11 @@ export function restoreEsi() {
   try {
     const parsed = parseJwt(stored);
     const character = extractCharacterInfo(parsed);
-    esiStore.setAuth(JSON.parse(stored).access_token, character);
+    esiStore.setCharacterAuth(
+      getAccessTokenFromEsiTokenData(stored), 
+      extractCharacterInfo(parsed),
+      extractExpiration(parsed)
+    );
   } catch (err) {
     console.error("Failed to restore ESI from localStorage", err);
   }

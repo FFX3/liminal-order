@@ -11,6 +11,6 @@
   });
 </script>
 
-{#if $esiStore.jwt}
+{#if $esiStore.active_character_id}
   {@render children()}
 {/if}
