@@ -13,7 +13,6 @@ export function parseJwt(token) {
  * @returns {{ id: string, name: string }}
  */
 export function extractCharacterInfo(parsedJWT) {
-    console.log(parsedJWT)
     return {
         id: parsedJWT.sub.split(":")[2],
         name: parsedJWT.name

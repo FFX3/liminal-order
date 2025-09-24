@@ -73,8 +73,6 @@ export function createEsiEndpointStore(store_key, consumer, transform, cacheMinu
    */
   const fetchIfNeeded = async (inputs, character_id, bypassCache = false) => {
     const key = getCacheKey(inputs);
-
-    console.log("fetching with char id", character_id)
     
     // Prevent duplicate fetches
     if (pendingFetches.has(key)) return;
