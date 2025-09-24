@@ -1,5 +1,6 @@
 // src/lib/stores/esi.js
-import { get, writable } from "svelte/store";
+import { clearAllStoredCharacters } from "$lib/auth/initEsi";
+import { derived, get, writable } from "svelte/store";
 
 /**
  * @typedef {Object} Character
@@ -17,18 +18,25 @@ import { get, writable } from "svelte/store";
 /**
  * @typedef {Object} EsiState
  * @property {Record<string, CharacterAuth>} characters - Map of character_id -> auth data
- * @property {string | null} active_character_id - Currently selected character
+ * @property {string | undefined} active_character_id - Currently selected character
  */
 
 function createEsiStore() {
   /** @type {import("svelte/store").Writable<EsiState>} */
   const { subscribe, update, set } = writable({
     characters: {},
-    active_character_id: null
+    active_character_id: undefined
   });
 
   return {
     subscribe,
+
+    /** Helper to get all authenticated character IDs */
+    characterIds() {
+      return derived({ subscribe }, $state=>{
+        return Object.keys($state.characters)
+      })
+    },
 
     /**
      * Add or update authentication for a character
@@ -43,8 +51,7 @@ function createEsiStore() {
           ...state.characters,
           [character.id]: { jwt, character, expires_at }
         },
-        // Set as active if it's the first character or no active character
-        active_character_id: state.active_character_id || character.id
+        active_character_id: character.id
       }));
     },
 
@@ -59,7 +66,7 @@ function createEsiStore() {
         
         // If removing active character, switch to another one or null
         const newActiveId = state.active_character_id === character_id
-          ? Object.keys(newCharacters)[0] || null
+          ? Object.keys(newCharacters)[0] || undefined
           : state.active_character_id;
 
         return {
@@ -71,7 +78,7 @@ function createEsiStore() {
 
     /**
      * Set the active character
-     * @param {string | null} character_id
+     * @param {string | undefined} character_id
      */
     setActiveCharacter(character_id) {
       update(state => ({
@@ -110,7 +117,7 @@ function createEsiStore() {
      * Clear all authentication data
      */
     clearAll() {
-      set({ characters: {}, active_character_id: null });
+      set({ characters: {}, active_character_id: undefined });
     }
   };
 }

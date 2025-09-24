@@ -13,6 +13,7 @@ export function parseJwt(token) {
  * @returns {{ id: string, name: string }}
  */
 export function extractCharacterInfo(parsedJWT) {
+    console.log(parsedJWT)
     return {
         id: parsedJWT.sub.split(":")[2],
         name: parsedJWT.name
@@ -28,10 +29,29 @@ export function extractExpiration(parsedJWT) {
 }
 
 /**
- * 
  * @param {string} esiTokenData 
  * @returns {string}
  */
 export function getAccessTokenFromEsiTokenData(esiTokenData) {
     return JSON.parse(esiTokenData).access_token
+}
+
+/**
+ * @param {string} esiTokenData 
+ * @returns {string}
+ */
+export function getRefreshTokenFromEsiTokenData(esiTokenData) {
+    return JSON.parse(esiTokenData).refresh_token
+}
+
+/**
+ * @param {string} prefix
+ */
+export function deleteWithPrefix(prefix) {
+  for (let i = localStorage.length - 1; i >= 0; i--) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith(prefix)) {
+      localStorage.removeItem(key);
+    }
+  }
 }

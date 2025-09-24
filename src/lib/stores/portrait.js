@@ -14,5 +14,9 @@ import { createEsiEndpointStore } from "./createEsiEndpointStore";
 
 /** @type {import("$lib/stores/createEsiEndpointStore").EsiEndpointStore<PortraitInput, PortraitUrls>} */
 export const portraitStore = createEsiEndpointStore(
-    (input)=>`/characters/${input.character_id}/portrait/`
+    'portraits',
+    (input)=>`/characters/${input.character_id}/portrait/`,
+    undefined,
+    60 * 24,
+    false
 );

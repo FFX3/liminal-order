@@ -12,8 +12,7 @@
     character_id
   } = $props();
 
-
-  const ordersSlice = ordersStore.select({ character_id });
+  const ordersSlice = ordersStore.select({ character_id }, character_id);
 </script>
 
 {#if $ordersSlice.loading}
