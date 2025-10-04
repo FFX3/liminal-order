@@ -4,6 +4,7 @@
 	import Orders from "$lib/components/OpenOrders.svelte"
 	import { esiStore } from "$lib/stores/esi";
 	import LogoutButton from "$lib/components/LogoutButton.svelte";
+	import SalesTax from "$lib/components/SalesTax.svelte";
 
 	const characterIds = esiStore.characterIds();
 
@@ -19,5 +20,5 @@
 
 {#each $characterIds as character_id }
 	<Portrait size={64} character_id={character_id} />
-	<Orders character_id={character_id} />
+	<SalesTax character_id={character_id} />
 {/each}

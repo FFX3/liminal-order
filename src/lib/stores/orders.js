@@ -1,6 +1,7 @@
 // src/lib/stores/orders.js
-import { getModuleName } from "$lib/utils";
 import { createEsiEndpointStore } from "./createEsiEndpointStore";
+
+/* Requires: esi-markets.read_character_orders.v1 */
 
 /**
  * @typedef {Object} Order
@@ -27,7 +28,7 @@ import { createEsiEndpointStore } from "./createEsiEndpointStore";
 /** @type {import("$lib/stores/createEsiEndpointStore").EsiEndpointStore<OrderInput, Order[]>} */
 export const ordersStore = createEsiEndpointStore(
     'orders',
-    (input)=>`/characters/${input.character_id}/orders/`,
+    (input)=>`/characters/${input.character_id}/orders`,
     undefined,
     20
 );
