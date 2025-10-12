@@ -1,20 +1,24 @@
 <script>
 	//import OpenOrders from "$lib/components/OpenOrders.svelte";
 	import Portrait from "$lib/components/Portrait.svelte";
-	import Orders from "$lib/components/OpenOrders.svelte"
 	import { esiStore } from "$lib/stores/esi";
 	import LogoutButton from "$lib/components/LogoutButton.svelte";
 	import SalesTax from "$lib/components/SalesTax.svelte";
+	import EsiTokenInfo from "$lib/components/EsiTokenInfo.svelte";
+	import StationCombobox from "$lib/components/StationCombobox.svelte";
+	import { writable } from "svelte/store";
 
 	const characterIds = esiStore.characterIds();
 
-	//const nicCharId = "95788602"
-	const tempest = "2114712844"
-	const tzu = "96501810"
-	const hang = "97187939"
+	let selectedStationId = writable(null)
+
 </script>
 
 <LogoutButton />
+
+<br><br>
+{$selectedStationId}
+<StationCombobox bind:selected={$selectedStationId} />
 
 <br><br>
 

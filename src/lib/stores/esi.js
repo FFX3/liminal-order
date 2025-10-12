@@ -51,7 +51,7 @@ function createEsiStore() {
           ...state.characters,
           [character.id]: { jwt, character, expires_at }
         },
-        active_character_id: character.id
+        active_character_id: state.active_character_id ?? character.id
       }));
     },
 

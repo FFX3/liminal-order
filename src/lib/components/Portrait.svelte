@@ -38,11 +38,12 @@
     <p>Something went wrong: {$portraitSlice.error.message}</p>
   </div>
 {:else if $portraitSlice.data}
-  <i>{character_id}</i>
-  <img
-    src={$portraitSlice.data[keyMapping[size]]}
-    alt="Character portrait"
-    width={size}
-    height={size}
-  />
+  <div style="width: {size}; height: ${size}">
+    <img
+      src={$portraitSlice.data[keyMapping[size]]}
+      alt="Character portrait"
+      width={size}
+      height={size}
+    />
+  </div>
 {/if}

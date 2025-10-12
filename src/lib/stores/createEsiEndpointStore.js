@@ -17,7 +17,7 @@ import { deleteWithPrefix } from "$lib/auth/utils";
  * For character-specific endpoints, inputs should include character_id.
  *
  * @template I
- * @typedef {(inputs: I) => string} Consumer
+ * @typedef {(inputs: I) => { uri: string, body?: any }} Consumer
  */
 
 /**
@@ -47,9 +47,10 @@ import { deleteWithPrefix } from "$lib/auth/utils";
  * @param {(json: any) => T} [transform] - Optional transform from raw JSON to T
  * @param {number} [cacheMinutes=60] - How long to keep items in cache
  * @param {boolean} [requiresAuth=true] - Whether this endpoint requires authentication
+ * @param {"GET" | "POST"} [method=GET] - Whether this endpoint requires authentication
  * @returns {EsiEndpointStore<I, T>}
  */
-export function createEsiEndpointStore(store_key, consumer, transform, cacheMinutes = 60, requiresAuth = true) {
+export function createEsiEndpointStore(store_key, consumer, transform, cacheMinutes = 60, requiresAuth = true, method = 'GET') {
   /** @type {import("svelte/store").Writable<Record<string, SliceState<T>>>} */
   const store = writable({});
   
@@ -61,8 +62,8 @@ export function createEsiEndpointStore(store_key, consumer, transform, cacheMinu
    * @param {I} inputs
    */
   const getCacheKey = (inputs) => {
-    const uri = consumer(inputs);
-    return `${store_key}:${uri}`
+    const { uri, body } = consumer(inputs);
+    return `${store_key}:${uri}:${JSON.stringify(body)}`
   };
 
   /**
@@ -123,7 +124,7 @@ export function createEsiEndpointStore(store_key, consumer, transform, cacheMinu
     pendingFetches.add(key);
 
     try {
-      const data = await fetchData(consumer, inputs, transform, jwt);
+      const data = await fetchData(consumer, inputs, transform, jwt, method);
       store.update(prev => {
         prev[key] = { data, loading: false, error: null };
         return prev;
@@ -175,18 +176,25 @@ export function createEsiEndpointStore(store_key, consumer, transform, cacheMinu
  * @param {I} inputs
  * @param {(json: any) => T} [transform] - Optional transform from raw JSON to T
  * @param {string} [jwt] - JWT token for authentication
+ * @param {"GET" | "POST"} [method]
  * @returns {Promise<T>}
  */
-async function fetchData(consumer, inputs, transform, jwt) {
-  const url = `https://esi.evetech.net/latest${consumer(inputs)}`;
+async function fetchData(consumer, inputs, transform, jwt, method) {
+  const { uri, body } = consumer(inputs)
+  const url = `https://esi.evetech.net/latest/${uri}`;
+
+  if(uri == 'universe/names') {
+    console.log("in fetcher", body)
+  }
 
   try {
     const headers = new Headers();
+    headers.set("Content-Type", "application/json")
     if (jwt) {
       headers.set("Authorization", `Bearer ${jwt}`)
     }
 
-    const res = await fetch(url, { headers });
+    const res = await fetch(url, { headers, body: JSON.stringify(body), method });
     
     if (!res.ok) {
       throw new Error(`ESI request failed: ${res.status}`);

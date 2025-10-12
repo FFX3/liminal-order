@@ -28,7 +28,7 @@ import { createEsiEndpointStore } from "./createEsiEndpointStore";
 /** @type {import("$lib/stores/createEsiEndpointStore").EsiEndpointStore<OrderInput, Order[]>} */
 export const ordersStore = createEsiEndpointStore(
     'orders',
-    (input)=>`/characters/${input.character_id}/orders`,
+    (input)=>({ uri: `characters/${input.character_id}/orders` }),
     undefined,
     20
 );
