@@ -1,5 +1,5 @@
 // src/lib/stores/taxRate.js
-import { derived, readable } from "svelte/store";
+import { derived, get, readable } from "svelte/store";
 import { skillsStore } from "./skills";
 import { esiStore } from "$lib/stores/esi";
 import { stationInfoStore } from "$lib/stores/stationInfo";
@@ -58,7 +58,7 @@ export function selectBrokerFee(inputs, character_id) {
                 const ownerId = $selectedStationInfo?.owner ?? null;
 
                 if (!characterId || !ownerId) {
-                    set(null);
+                    set(0);
                     return;
                 }
 
@@ -129,7 +129,7 @@ export function selectBrokerFee(inputs, character_id) {
             [factionId],
             ([$factionId], set) => {
                 if (!characterId || !$factionId) {
-                    set(null);
+                    set(0);
                     return;
                 }
 
@@ -176,7 +176,8 @@ export function selectBrokerFee(inputs, character_id) {
 		}
     )
 
-  
+    console.log(get(brokerRelationsLevel), get(standingsWithOwnerFaction), get(standingsWithOwner), get(brokerFee))
+    // thers a bug, try "Doril I - Archangels Assembly Plant" with jade
     return derived(
         [brokerRelationsLevel, standingsWithOwnerFaction, standingsWithOwner, brokerFee], 
         ([$brokerRelationsLevel, $standingsWithOwnerFaction, $standingsWithOwner, $brokerFee])=> {

@@ -32,7 +32,13 @@
 
 <br><br>
 
-<p>broker fee: {(Number($brokerFeeInfo.data?.brokerFee) * 100).toFixed(2)}%</p>
+<p>broker fee: {(Number($brokerFeeInfo.data?.brokerFee) * 100)}%</p>
+
+<pre>
+{$brokerFeeInfo.data?.brokerRelationsLevel}
+{$brokerFeeInfo.data?.standingsWithOwner}
+{$brokerFeeInfo.data?.standingsWithOwnerFaction}
+</pre>
 
 <StationCombobox bind:selected={$selectedStationId} />
 
