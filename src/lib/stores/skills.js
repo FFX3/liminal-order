@@ -19,7 +19,7 @@ import { createEsiEndpointStore } from "./createEsiEndpointStore";
  */
 
 /** @typedef {Object} OrderInput
- * @property {string} character_id
+ * @property {number} character_id
  */
 
 /** @type {import("$lib/stores/createEsiEndpointStore").EsiEndpointStore<OrderInput, SkillLookupResponse>} */

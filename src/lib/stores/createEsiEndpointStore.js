@@ -24,11 +24,11 @@ import { deleteWithPrefix } from "$lib/auth/utils";
  * @template I, T
  * @typedef {Object} EsiEndpointStore
  *
- * @property {(inputs: I, character_id?: string) => import("svelte/store").Readable<SliceState<T>>} select
+ * @property {(inputs: I, character_id?: number) => import("svelte/store").Readable<SliceState<T>>} select
  *   Create a derived store (slice) for the given inputs. Automatically fetches if not cached.
  *   If character_id is provided, uses that character's JWT. Otherwise uses active character.
  *
- * @property {(inputs: I, character_id?: string) => Promise<void>} invalidate
+ * @property {(inputs: I, character_id?: number) => Promise<void>} invalidate
  *   Force a fresh fetch for the given inputs, bypassing cache.
  *
  * @property {import("svelte/store").Readable<Record<string, SliceState<T>>>} state
@@ -69,7 +69,7 @@ export function createEsiEndpointStore(store_key, consumer, transform, cacheMinu
   /**
    * Internal fetch function
    * @param {I} inputs 
-   * @param {string} [character_id]
+   * @param {number} [character_id]
    * @param {boolean} [bypassCache=false]
    */
   const fetchIfNeeded = async (inputs, character_id, bypassCache = false) => {

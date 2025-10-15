@@ -1,10 +1,9 @@
 // src/lib/stores/esi.js
-import { clearAllStoredCharacters } from "$lib/auth/initEsi";
 import { derived, get, writable } from "svelte/store";
 
 /**
  * @typedef {Object} Character
- * @property {string} id
+ * @property {number} id
  * @property {string} name
  */
 
@@ -17,8 +16,8 @@ import { derived, get, writable } from "svelte/store";
 
 /**
  * @typedef {Object} EsiState
- * @property {Record<string, CharacterAuth>} characters - Map of character_id -> auth data
- * @property {string | undefined} active_character_id - Currently selected character
+ * @property {Record<number, CharacterAuth>} characters - Map of character_id -> auth data
+ * @property {number | undefined} active_character_id - Currently selected character
  */
 
 function createEsiStore() {
@@ -34,7 +33,7 @@ function createEsiStore() {
     /** Helper to get all authenticated character IDs */
     characterIds() {
       return derived({ subscribe }, $state=>{
-        return Object.keys($state.characters)
+        return Object.keys($state.characters).map(id=>Number(id))
       })
     },
 
@@ -57,7 +56,7 @@ function createEsiStore() {
 
     /**
      * Remove a character's authentication
-     * @param {string} character_id
+     * @param {number} character_id
      */
     removeCharacterAuth(character_id) {
       update(state => {
@@ -71,14 +70,14 @@ function createEsiStore() {
 
         return {
           characters: newCharacters,
-          active_character_id: newActiveId
+          active_character_id: Number(newActiveId)
         };
       });
     },
 
     /**
      * Set the active character
-     * @param {string | undefined} character_id
+     * @param {number | undefined} character_id
      */
     setActiveCharacter(character_id) {
       update(state => ({
@@ -89,7 +88,7 @@ function createEsiStore() {
 
     /**
      * Get JWT for a specific character
-     * @param {string} character_id
+     * @param {number} character_id
      * @returns {string | null}
      */
     getJwtForCharacter(character_id) {

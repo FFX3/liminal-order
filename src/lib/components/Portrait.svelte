@@ -3,7 +3,7 @@
 
   /** @typedef {Object} Props
    * @property {64 | 128 | 256 | 512} size 
-   * @property {string} character_id 
+   * @property {number} character_id 
    */
 
   /** @type Props*/

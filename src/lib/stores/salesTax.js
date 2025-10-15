@@ -4,7 +4,7 @@ import { skillsStore } from "./skills";
 
 /**
  * @typedef {Object} TaxRateInput
- * @property {string} character_id
+ * @property {number} character_id
  */
 
 const ACCOUNTING_SKILL_ID = 16622;
@@ -31,7 +31,7 @@ function calculateTaxRate(skillsData) {
 /**
  * Create a tax rate store for a specific character
  * @param {TaxRateInput} inputs
- * @param {string} [character_id] - Optional character ID, uses inputs.character_id if not provided
+ * @param {number} [character_id] - Optional character ID, uses inputs.character_id if not provided
  * @returns {import("svelte/store").Readable<import("./createEsiEndpointStore").SliceState<{ salesTax: number }>>}
  */
 export function selectTaxRate(inputs, character_id) {

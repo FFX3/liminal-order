@@ -1,3 +1,5 @@
+// Got here https://www.adam4eve.eu/info_stations.php
+
 const tsvData = `
 60015181	0EK-NJ V - Caldari Navy Anchorage
 60014338	0G-A25 VI - Moon 20 - True Power Mining Outpost

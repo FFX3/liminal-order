@@ -3,7 +3,7 @@
 
   
   /** @typedef {Object} Props
-   * @property {string} character_id 
+   * @property {number} character_id 
    */
 
   /** @type Props*/
@@ -15,7 +15,7 @@
 </script>
 
 {#if $salesTaxSlice.loading}
-  <p>Loading orders…</p>
+  <p>Loading tax rate…</p>
 {:else if $salesTaxSlice.error}
   <p>Error: {$salesTaxSlice.error.message}</p>
 {:else if $salesTaxSlice.data}

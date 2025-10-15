@@ -9,7 +9,7 @@ import { createEsiEndpointStore } from "./createEsiEndpointStore";
  */
 
 /** @typedef {Object} PortraitInput
- * @property {string} character_id
+ * @property {number} character_id
  */
 
 /** @type {import("$lib/stores/createEsiEndpointStore").EsiEndpointStore<PortraitInput, PortraitUrls>} */

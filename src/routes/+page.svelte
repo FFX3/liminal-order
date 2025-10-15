@@ -9,7 +9,8 @@
     // Edit scopes https://developers.eveonline.com/applications/details/72743549 
     const scope = encodeURI([
         "esi-skills.read_skills.v1",
-        "esi-markets.read_character_orders.v1"
+        "esi-markets.read_character_orders.v1",
+        "esi-characters.read_standings.v1"
     ].join(" "))
 </script>
 
