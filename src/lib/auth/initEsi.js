@@ -24,17 +24,19 @@ export function initEsi() {
 
   try {
     const esiTokenData = decodeURIComponent(match[1]);
-    const parsed = parseJwt(esiTokenData);
-    const character = extractCharacterInfo(parsed);
-    const expiresAt = extractExpiration(parsed);
-    const jwt = getAccessTokenFromEsiTokenData(esiTokenData);
+    const authData = JSON.parse(esiTokenData)
+    
+    const jwt = authData.esiData.access_token;
+    const parsedJWT = parseJwt(jwt);
+    const character = extractCharacterInfo(parsedJWT);
+    const expiresAt = extractExpiration(parsedJWT);
 
     // Add to store
     esiStore.setCharacterAuth(jwt, character, expiresAt);
 
     // Persist to localStorage with other characters
-    saveCharacterToStorage(character.id, {
-      esiTokenData,
+    saveCharacterToStorage({
+      esiTokenData: JSON.stringify(authData.esiData),
       character,
       expires_at: expiresAt
     });
@@ -59,6 +61,7 @@ export async function restoreEsi() {
   let expiredCount = 0;
 
   for (const [characterId, authData] of Object.entries(stored)) {
+    console.log("res", characterId, authData)
     try {
       let jwt
       let character
@@ -74,7 +77,7 @@ export async function restoreEsi() {
         const parsed = parseJwt(jwt);
         character = extractCharacterInfo(parsed);
         expiresAt = extractExpiration(parsed);
-        saveCharacterToStorage(character.id, {
+        saveCharacterToStorage({
           esiTokenData: JSON.stringify(esiTokenData),
           character,
           expires_at: expiresAt
@@ -105,7 +108,7 @@ export async function restoreEsi() {
 
 /**
  * Manually remove a character's authentication
- * @param {string} characterId 
+ * @param {number} characterId 
  */
 export function removeCharacterAuth(characterId) {
   esiStore.removeCharacterAuth(characterId);
@@ -127,14 +130,13 @@ function getStoredCharacters() {
 }
 
 /**
- * Save a character's auth data to localStorage
- * @param {string} characterId 
+ * Save a character's auth data to localStorage 
  * @param {StoredCharacterAuth} authData 
  */
-function saveCharacterToStorage(characterId, authData) {
+function saveCharacterToStorage(authData) {
   try {
     const stored = getStoredCharacters();
-    stored[characterId] = authData;
+    stored[authData.character.id] = authData;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
   } catch (err) {
     console.error("Failed to save character to storage:", err);
@@ -143,7 +145,7 @@ function saveCharacterToStorage(characterId, authData) {
 
 /**
  * Remove a character from localStorage
- * @param {string} characterId 
+ * @param {number} characterId 
  */
 function removeCharacterFromStorage(characterId) {
   try {

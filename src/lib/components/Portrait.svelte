@@ -1,5 +1,6 @@
 <script>
   import { portraitStore } from "$lib/stores/portrait";
+	import { derived } from "svelte/store";
 
   /** @typedef {Object} Props
    * @property {64 | 128 | 256 | 512} size 
@@ -7,10 +8,7 @@
    */
 
   /** @type Props*/
-  let { 
-    size,
-    character_id
-  } = $props();
+  let { character_id, size } = $props();
 
   /** @typedef {"px64x64" | "px128x128" | "px256x256" | "px512x512"} PortraitKey */
   /** @type {Record<64 | 128 | 256 | 512, PortraitKey>} */
@@ -21,26 +19,33 @@
     64: "px64x64"
   };
 
-  /** @type import("$lib/stores/portrait").PortraitInput */
-  let inputs = {
-    character_id
-  }
+  /** @type {import("$lib/stores/createEsiEndpointStore").SliceState<
+   *    import("$lib/stores/portrait").PortraitUrls
+   *  >} 
+   */
+  let portraitSlice = $state({ data: null, loading: true, error: null });
 
-  // subscribe to slice for this character
-  const portraitSlice = portraitStore.select(inputs);
+  $effect(() => {
+    const store = portraitStore.select({ character_id });
+    const unsubscribe = store.subscribe(value => {
+      portraitSlice = value;
+    });
+    
+    return unsubscribe;
+  });
 
 </script>
 
-{#if $portraitSlice.loading}
+{#if portraitSlice.loading}
   <div style="width: {size}px; height: {size}px"></div>
-{:else if $portraitSlice.error}
+{:else if portraitSlice.error}
   <div style="width: {size}px; height: {size}px">
-    <p>Something went wrong: {$portraitSlice.error.message}</p>
+    <p>Something went wrong: {portraitSlice.error.message}</p>
   </div>
-{:else if $portraitSlice.data}
+{:else if portraitSlice.data}
   <div style="width: {size}; height: ${size}">
     <img
-      src={$portraitSlice.data[keyMapping[size]]}
+      src={portraitSlice.data[keyMapping[size]]}
       alt="Character portrait"
       width={size}
       height={size}

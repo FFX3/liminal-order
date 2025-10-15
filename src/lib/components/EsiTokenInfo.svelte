@@ -13,7 +13,7 @@
 		: undefined
 
 	/**
-	 * @param {string | undefined} id
+	 * @param {number | undefined} id
 	 */
 	function setActive(id) {
 		esiStore.setActiveCharacter(id)

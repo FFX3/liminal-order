@@ -176,8 +176,6 @@ export function selectBrokerFee(inputs, character_id) {
 		}
     )
 
-    console.log(get(brokerRelationsLevel), get(standingsWithOwnerFaction), get(standingsWithOwner), get(brokerFee))
-    // thers a bug, try "Doril I - Archangels Assembly Plant" with jade
     return derived(
         [brokerRelationsLevel, standingsWithOwnerFaction, standingsWithOwner, brokerFee], 
         ([$brokerRelationsLevel, $standingsWithOwnerFaction, $standingsWithOwner, $brokerFee])=> {

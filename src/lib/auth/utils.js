@@ -10,11 +10,11 @@ export function parseJwt(token) {
 
 /**
  * @param {{ sub: string; name: string; }} parsedJWT
- * @returns {{ id: string, name: string }}
+ * @returns {{ id: number, name: string }}
  */
 export function extractCharacterInfo(parsedJWT) {
     return {
-        id: parsedJWT.sub.split(":")[2],
+        id: Number(parsedJWT.sub.split(":")[2]),
         name: parsedJWT.name
     }
 }

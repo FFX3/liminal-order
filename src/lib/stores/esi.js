@@ -95,8 +95,11 @@ function createEsiStore() {
       const state = get({ subscribe });
       const auth = state.characters[character_id];
       
+      console.log("getting jwt", auth)
+      
       // Check if JWT is expired
       if (auth && auth.expires_at > Date.now() / 1000) {
+        
         return auth.jwt;
       }
       return null;
