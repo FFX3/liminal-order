@@ -32,42 +32,63 @@ const BROKER_RELATIONS = 3446
  */
 export function selectBrokerFee(inputs, character_id) {
     const characterId = character_id || inputs.character_id;
-    /** @type {import("svelte/store").Readable<import("$lib/stores/stationInfo").Response | null>} */
-    let selectedStationInfo = readable(null)
+    
+    /** @type {import("svelte/store").Readable<import("./createEsiEndpointStore").SliceState<import("$lib/stores/stationInfo").Response>>} */
+    let selectedStationInfo = readable({ data: null, loading: false, error: null })
 
-    /** @type {import("svelte/store").Readable<number | null>} */
-    let standingsWithOwner = readable(null)
+    /** @type {import("svelte/store").Readable<import("./createEsiEndpointStore").SliceState<number>>} */
+    let standingsWithOwner = readable({ data: 0, loading: false, error: null })
 
-    /** @type {import("svelte/store").Readable<import("$lib/stores/corporationInfo").Response | null>} */
-    let ownerCorporationInfo = readable(null)
+    /** @type {import("svelte/store").Readable<import("./createEsiEndpointStore").SliceState<import("$lib/stores/corporationInfo").Response>>} */
+    let ownerCorporationInfo = readable({ data: null, loading: false, error: null })
 
-    /** @type {import("svelte/store").Readable<number | null>} */
-    let factionId = readable(null)
+    /** @type {import("svelte/store").Readable<import("./createEsiEndpointStore").SliceState<number>>} */
+    let factionId = readable({ data: null, loading: false, error: null })
 
-    /** @type {import("svelte/store").Readable<number | null>} */
-    let standingsWithOwnerFaction = readable(null)
+    /** @type {import("svelte/store").Readable<import("./createEsiEndpointStore").SliceState<number>>} */
+    let standingsWithOwnerFaction = readable({ data: 0, loading: false, error: null })
     
     if(inputs.station_id){
-        selectedStationInfo = derived(stationInfoStore.select({ station_id: inputs.station_id }), (slice)=> {
-            return slice.data
-        })
+        selectedStationInfo = stationInfoStore.select({ station_id: inputs.station_id });
 
         standingsWithOwner = derived(
             [selectedStationInfo],
             ([$selectedStationInfo], set) => {
-                const ownerId = $selectedStationInfo?.owner ?? null;
+                // If station info is loading, we're loading
+                if ($selectedStationInfo.loading) {
+                    set({ data: null, loading: true, error: null });
+                    return;
+                }
+
+                // If station info has error, propagate it
+                if ($selectedStationInfo.error) {
+                    set({ data: null, loading: false, error: $selectedStationInfo.error });
+                    return;
+                }
+
+                const ownerId = $selectedStationInfo.data?.owner ?? null;
 
                 if (!characterId || !ownerId) {
-                    set(0);
+                    set({ data: 0, loading: false, error: null });
                     return;
                 }
 
                 const standings = standingsStore.select({ character_id: characterId });
 
                 const unsub = standings.subscribe((slice) => {
-                    const factions = slice?.data ?? [];
+                    if (slice.loading) {
+                        set({ data: null, loading: true, error: null });
+                        return;
+                    }
+                    
+                    if (slice.error) {
+                        set({ data: null, loading: false, error: slice.error });
+                        return;
+                    }
+
+                    const factions = slice.data ?? [];
                     const record = factions.find((f) => f.from_id === ownerId);
-                    set(record?.standing ?? 0);
+                    set({ data: record?.standing ?? 0, loading: false, error: null });
                 });
 
                 return () => unsub();
@@ -77,19 +98,37 @@ export function selectBrokerFee(inputs, character_id) {
         ownerCorporationInfo = derived(
             [selectedStationInfo],
             ([$selectedStationInfo], set) => {
-                const ownerId = $selectedStationInfo?.owner ?? null;
+                // If station info is loading, we're loading
+                if ($selectedStationInfo.loading) {
+                    set({ data: null, loading: true, error: null });
+                    return;
+                }
+
+                // If station info has error, propagate it
+                if ($selectedStationInfo.error) {
+                    set({ data: null, loading: false, error: $selectedStationInfo.error });
+                    return;
+                }
+
+                const ownerId = $selectedStationInfo.data?.owner ?? null;
 
                 if (!characterId || !ownerId) {
-                    set(null);
+                    set({ data: null, loading: false, error: null });
                     return;
                 }
 
                 const unsub = corporationsStore.select({ corporation_id: ownerId }).subscribe((slice) => {
-                    if (slice?.data) {
-                        set(slice.data);
-                    } else if (slice === null) {
-                        set(null);
+                    if (slice.loading) {
+                        set({ data: null, loading: true, error: null });
+                        return;
                     }
+                    
+                    if (slice.error) {
+                        set({ data: null, loading: false, error: slice.error });
+                        return;
+                    }
+
+                    set({ data: slice.data, loading: false, error: null });
                 });
 
                 return () => unsub();
@@ -99,26 +138,45 @@ export function selectBrokerFee(inputs, character_id) {
         factionId = derived(
             [ownerCorporationInfo],
             ([$ownerCorporationInfo], set) => {
-                const ownerName = $ownerCorporationInfo?.name ?? null;
+                // If corporation info is loading, we're loading
+                if ($ownerCorporationInfo.loading) {
+                    set({ data: null, loading: true, error: null });
+                    return;
+                }
+
+                // If corporation info has error, propagate it
+                if ($ownerCorporationInfo.error) {
+                    set({ data: null, loading: false, error: $ownerCorporationInfo.error });
+                    return;
+                }
+
+                const ownerName = $ownerCorporationInfo.data?.name ?? null;
 
                 if (!ownerName) {
-                    set(null);
+                    set({ data: null, loading: false, error: null });
                     return;
                 }
 
                 let factionName = getFactionNameByCorpName(ownerName)
 
                 if (!factionName) {
-                    set(null);
+                    set({ data: null, loading: false, error: null });
                     return;
                 }
 
                 const unsub = bulkNamesToIdStore.select([factionName]).subscribe((slice) => {
-                    if (slice?.data) {
-                        set(slice.data.factions[0].id);
-                    } else if (slice === null) {
-                        set(null);
+                    if (slice.loading) {
+                        set({ data: null, loading: true, error: null });
+                        return;
                     }
+                    
+                    if (slice.error) {
+                        set({ data: null, loading: false, error: slice.error });
+                        return;
+                    }
+
+                    const factionId = slice.data?.factions?.[0]?.id ?? null;
+                    set({ data: factionId, loading: false, error: null });
                 });
 
                 return () => unsub();
@@ -128,18 +186,39 @@ export function selectBrokerFee(inputs, character_id) {
         standingsWithOwnerFaction = derived(
             [factionId],
             ([$factionId], set) => {
-                if (!characterId || !$factionId) {
-                    set(0);
+                // If faction ID is loading, we're loading
+                if ($factionId.loading) {
+                    set({ data: null, loading: true, error: null });
+                    return;
+                }
+
+                // If faction ID has error, propagate it
+                if ($factionId.error) {
+                    set({ data: null, loading: false, error: $factionId.error });
+                    return;
+                }
+
+                if (!characterId || !$factionId.data) {
+                    set({ data: 0, loading: false, error: null });
                     return;
                 }
 
                 const standings = standingsStore.select({ character_id: characterId });
 
                 const unsub = standings.subscribe((slice) => {
-                    const standings = slice?.data ?? [];
-                    console.log($factionId, standings)
-                    const record = standings.find((f) => f.from_id === $factionId)
-                    set(record?.standing ?? 0);
+                    if (slice.loading) {
+                        set({ data: null, loading: true, error: null });
+                        return;
+                    }
+                    
+                    if (slice.error) {
+                        set({ data: null, loading: false, error: slice.error });
+                        return;
+                    }
+
+                    const standings = slice.data ?? [];
+                    const record = standings.find((f) => f.from_id === $factionId.data);
+                    set({ data: record?.standing ?? 0, loading: false, error: null });
                 });
 
                 return () => unsub();
@@ -147,18 +226,28 @@ export function selectBrokerFee(inputs, character_id) {
         );
     }
 
-	/** @type {import("svelte/store").Readable<number | null>} */
+	/** @type {import("svelte/store").Readable<import("./createEsiEndpointStore").SliceState<number>>} */
 	let brokerRelationsLevel = derived(esiStore, ($esiStore, set) => {
 		if(!characterId) {
-			set(null)
+			set({ data: null, loading: false, error: null });
 			return
 		}
 
 		const skills = skillsStore.select({ character_id: characterId });
 
 		const unsub = skills.subscribe((slice) => {
+            if (slice.loading) {
+                set({ data: null, loading: true, error: null });
+                return;
+            }
+            
+            if (slice.error) {
+                set({ data: null, loading: false, error: slice.error });
+                return;
+            }
+
 			const level = slice.data?.skills.find(skill=>skill.skill_id == BROKER_RELATIONS)?.active_skill_level;
-			set(level ?? 0);
+			set({ data: level ?? 0, loading: false, error: null });
 		});
 
 		return () => unsub();
@@ -169,23 +258,45 @@ export function selectBrokerFee(inputs, character_id) {
 	let brokerFee = derived(
 		[brokerRelationsLevel, standingsWithOwnerFaction, standingsWithOwner], 
 		([$brokerRelationsLevel, $standingsWithOwnerFaction, $standingsWithOwner])=> {
+            // If any dependency is loading, we're loading
+            if ($brokerRelationsLevel.loading || $standingsWithOwnerFaction.loading || $standingsWithOwner.loading) {
+                return { data: null, loading: true, error: null };
+            }
+
+            // If any dependency has an error, propagate the first error
+            const error = $brokerRelationsLevel.error || $standingsWithOwnerFaction.error || $standingsWithOwner.error;
+            if (error) {
+                return { data: null, loading: false, error };
+            }
+
 			// 3%-(0.3%*BrokerRelationsLevel)-(0.03%*FactionStanding)-(0.02%*CorpStanding)
-			return ((3-(0.3 * Number($brokerRelationsLevel)))
-				- (0.03 * Number($standingsWithOwnerFaction))
-				- (0.02 * Number($standingsWithOwner))) / 100
+            const fee = ((3-(0.3 * Number($brokerRelationsLevel.data ?? 0)))
+				- (0.03 * Number($standingsWithOwnerFaction.data ?? 0))
+				- (0.02 * Number($standingsWithOwner.data ?? 0))) / 100;
+			
+            return { data: fee, loading: false, error: null };
 		}
     )
 
     return derived(
         [brokerRelationsLevel, standingsWithOwnerFaction, standingsWithOwner, brokerFee], 
         ([$brokerRelationsLevel, $standingsWithOwnerFaction, $standingsWithOwner, $brokerFee])=> {
-        // Compute tax rate
+        // If broker fee is loading, the whole thing is loading
+        if ($brokerFee.loading) {
+            return { data: null, loading: true, error: null };
+        }
+
+        // If broker fee has error, propagate it
+        if ($brokerFee.error) {
+            return { data: null, loading: false, error: $brokerFee.error };
+        }
+
         try {
             const data = {
-                brokerFee: $brokerFee,
-                brokerRelationsLevel: $brokerRelationsLevel,
-                standingsWithOwner: $standingsWithOwner,
-                standingsWithOwnerFaction: $standingsWithOwnerFaction
+                brokerFee: $brokerFee.data,
+                brokerRelationsLevel: $brokerRelationsLevel.data,
+                standingsWithOwner: $standingsWithOwner.data,
+                standingsWithOwnerFaction: $standingsWithOwnerFaction.data
             };
             return { data, loading: false, error: null };
         } catch (err) {
