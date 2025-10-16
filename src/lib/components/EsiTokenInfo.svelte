@@ -1,4 +1,6 @@
 <script>
+	import { addCharacter } from "$lib/auth/addCharacter";
+	import { logout } from "$lib/auth/logout";
 	import { esiStore } from "$lib/stores/esi"
 	import Portrait from "./Portrait.svelte"
 	import { writable } from "svelte/store"
@@ -29,7 +31,7 @@
 		on:click={() => ($collapsed = !$collapsed)}
 	>
 		<div class="font-semibold text-sm">
-			ESI Debug Panel {activeCharacter ? `— ${activeCharacter.name}` : ""}
+			ESI Manager {activeCharacter ? `— ${activeCharacter.name}` : ""}
 		</div>
 		<div class="text-xs text-gray-400">{$collapsed ? "▲" : "▼"}</div>
 	</button>
@@ -66,6 +68,30 @@
 					</div>
 				</button>
 			{/each}
+			<button
+				class={`flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors hover:bg-neutral-800 border border-neutral-800`}
+				on:click={addCharacter}
+			>
+				<div>
+					<div
+						class={`font-semiboldtext-gray-300 p-4`}
+					>
+						Add Character / Reauthenticate
+					</div>
+				</div>
+			</button>
+			<button
+				class={`flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors hover:bg-neutral-800 border border-neutral-800`}
+				on:click={logout}
+			>
+				<div>
+					<div
+						class={`font-semiboldtext-gray-300 p-4`}
+					>
+						Sign out
+					</div>
+				</div>
+			</button>
 		</div>
 	{/if}
 </div>

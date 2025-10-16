@@ -1,5 +1,6 @@
 // src/lib/auth/initEsi.js
 import { esiStore } from "$lib/stores/esi";
+import { supabase } from "$lib/supabaseClient";
 import { parseJwt, extractCharacterInfo, extractExpiration, getAccessTokenFromEsiTokenData, getRefreshTokenFromEsiTokenData } from "$lib/auth/utils";
 
 const STORAGE_KEY = "esiCharacters";
@@ -14,8 +15,9 @@ const STORAGE_KEY = "esiCharacters";
 /**
  * Initialize ESI state from URL hash (after SSO redirect)
  * and persist token in localStorage with other characters.
+ * Also sets the Supabase session.
  */
-export function initEsi() {
+export async function initEsi() {
   const hash = window.location.hash; // e.g. "#esiTokenData=..."
   if (!hash) return;
 
@@ -24,8 +26,24 @@ export function initEsi() {
 
   try {
     const esiTokenData = decodeURIComponent(match[1]);
-    const authData = JSON.parse(esiTokenData)
+    const authData = JSON.parse(esiTokenData);
+    console.log(authData);
     
+    // Handle Supabase session
+    if (authData.supabase_session) {
+      const { error } = await supabase.auth.setSession({
+        access_token: authData.supabase_session.access_token,
+        refresh_token: authData.supabase_session.refresh_token
+      });
+
+      if (error) {
+        console.error('Failed to set Supabase session:', error);
+      } else {
+        console.log('Supabase session established');
+      }
+    }
+    
+    // Handle ESI token
     const jwt = authData.esiData.access_token;
     const parsedJWT = parseJwt(jwt);
     const character = extractCharacterInfo(parsedJWT);
@@ -61,19 +79,18 @@ export async function restoreEsi() {
   let expiredCount = 0;
 
   for (const [characterId, authData] of Object.entries(stored)) {
-    console.log("res", characterId, authData)
     try {
-      let jwt
-      let character
-      let expiresAt
+      let jwt;
+      let character;
+      let expiresAt;
       // Check if token is expired
       if (authData.expires_at <= now) {
-        console.log(`refreshing for char:${characterId}`)
-        const refresh_token = getRefreshTokenFromEsiTokenData(authData.esiTokenData)
-        const client_id = "72743549513a4d14a7a37102d468ae0c"
-        const res = await fetch(`https://wwubrvsbuhzlpymjgjvw.supabase.co/functions/v1/refresh-token/?client_id=${client_id}&refresh_token=${refresh_token}`)
-        const esiTokenData = (await res.json()).esiTokenData
-        jwt = esiTokenData.access_token
+        console.log(`refreshing for char:${characterId}`);
+        const refresh_token = getRefreshTokenFromEsiTokenData(authData.esiTokenData);
+        const client_id = "72743549513a4d14a7a37102d468ae0c";
+        const res = await fetch(`https://wwubrvsbuhzlpymjgjvw.supabase.co/functions/v1/refresh-token/?client_id=${client_id}&refresh_token=${refresh_token}`);
+        const esiTokenData = (await res.json()).esiTokenData;
+        jwt = esiTokenData.access_token;
         const parsed = parseJwt(jwt);
         character = extractCharacterInfo(parsed);
         expiresAt = extractExpiration(parsed);
@@ -83,9 +100,9 @@ export async function restoreEsi() {
           expires_at: expiresAt
         });
       } else {
-        console.log(`using local token for char:${characterId}`)
+        console.log(`using local token for char:${characterId}`);
         jwt = getAccessTokenFromEsiTokenData(authData.esiTokenData);
-        const parsed = parseJwt(authData.esiTokenData);
+        const parsed = parseJwt(jwt);
         character = extractCharacterInfo(parsed);
         expiresAt = extractExpiration(parsed);
       }
@@ -160,11 +177,12 @@ function removeCharacterFromStorage(characterId) {
 /**
  * Clear all stored character data
  */
-export function clearAllStoredCharacters() {
+export async function clearAllStoredCharacters() {
   try {
     localStorage.removeItem(STORAGE_KEY);
     esiStore.clearAll();
-    console.log("Cleared all stored character data");
+    await supabase.auth.signOut();
+    console.log("Cleared all stored character data and signed out");
   } catch (err) {
     console.error("Failed to clear stored characters:", err);
   }

@@ -1,32 +1,44 @@
 <script>
-    const redirect_uri = "https://wwubrvsbuhzlpymjgjvw.supabase.co/functions/v1/eve-sso-login"
-    const client_id = "72743549513a4d14a7a37102d468ae0c"
+	import { esiStore } from "$lib/stores/esi";
+	import StationCombobox from "$lib/components/StationCombobox.svelte";
+	import { writable } from "svelte/store";
+	import { brokerFeeStore } from "$lib/stores/brokerFee";
+	import Portrait from "$lib/components/Portrait.svelte";
 
-    const state = JSON.stringify({
-        app_url: "http://localhost:5173"
-    })
+	/** @type {import("svelte/store").Writable<number | null>} */
+	let selectedStationId = writable(null)
 
-    // Edit scopes https://developers.eveonline.com/applications/details/72743549 
-    const scope = encodeURI([
-        "esi-skills.read_skills.v1",
-        "esi-markets.read_character_orders.v1",
-        "esi-characters.read_standings.v1"
-    ].join(" "))
+	let active_character_id = $derived($esiStore.active_character_id)
+
+	/** @type {import("$lib/stores/createEsiEndpointStore").SliceState<import("$lib/stores/brokerFee").BrokerFeeInfo>} */
+	let brokerFeeInfo = $state({ data: null, loading: true, error: null });
+
+	$effect(() => {
+		/** @type {import("svelte/store").Readable<import("$lib/stores/createEsiEndpointStore").SliceState<import("$lib/stores/brokerFee").BrokerFeeInfo>>} */
+		const store = brokerFeeStore.select({
+			character_id: $esiStore.active_character_id,
+			station_id: $selectedStationId ?? undefined
+		});
+		
+		const unsubscribe = store.subscribe(value => {
+			brokerFeeInfo = value;
+		});
+		
+		return unsubscribe;
+	});
+
 </script>
 
+{#if active_character_id }
+	<p><Portrait character_id={active_character_id} size={64} /></p>
+{/if}
 
-<div class="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-    <main class="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-    <div class="flex gap-4 items-center flex-col sm:flex-row">
-        <a href={`https://login.eveonline.com/v2/oauth/authorize/?response_type=code&redirect_uri=${redirect_uri}&client_id=${client_id}&state=${state}&scope=${scope}`}>
-        <img
-            src="/eve-sso-login-white-large.png"
-            alt="ESI Login"
-            width={270}
-            height={45}
-        />
-        </a>
-    </div>
-    </main>
-</div>
-["esi-skills.read_skills.v1","esi-markets.read_character_orders.v1"]
+{#if brokerFeeInfo.loading}
+	<p>Loading broker fee...</p>
+{:else if brokerFeeInfo.error}
+	<p>Error loading broker fee: {brokerFeeInfo.error.message}</p>
+{:else if brokerFeeInfo.data}
+	<p>broker fee: {(Number(brokerFeeInfo.data.brokerFee) * 100).toFixed(2)}%</p>
+{/if}
+
+<StationCombobox bind:selected={$selectedStationId} />
