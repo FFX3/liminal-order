@@ -36,12 +36,11 @@
 		<div class="text-xs text-gray-400">{$collapsed ? "▲" : "▼"}</div>
 	</button>
 
-	<!-- Content -->
 	{#if !$collapsed}
-		<div class="max-h-72 overflow-y-auto p-3 space-y-3">
+		<div class="max-h-72 overflow-y-auto p-3 flex flex-wrap gap-3">
 			{#each tokens as token}
 				<button
-					class={`flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors ${
+					class={`flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors w-fit ${
 						token.character.id === activeCharacterId
 							? "bg-indigo-600/30 border border-indigo-500"
 							: "hover:bg-neutral-800 border border-neutral-800"
@@ -49,7 +48,7 @@
 					on:click={() => setActive(token.character.id)}
 				>
 					<Portrait character_id={token.character.id} size={64} />
-					<div>
+					<div class="text-left">
 						<div
 							class={`font-semibold ${
 								token.character.id === activeCharacterId
@@ -59,39 +58,32 @@
 						>
 							{token.character.name}
 						</div>
-						<div class="text-xs text-gray-500">
-							ID: {token.character.id}
-						</div>
+						<div class="text-xs text-gray-500">ID: {token.character.id}</div>
 						<div class="text-xs text-gray-500">
 							Expires: {new Date(token.expires_at * 1000).toLocaleString()}
 						</div>
 					</div>
 				</button>
 			{/each}
+
+			<!-- Add Character -->
 			<button
-				class={`flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors hover:bg-neutral-800 border border-neutral-800`}
+				class="flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors hover:bg-neutral-800 border border-neutral-800 w-fit"
 				on:click={addCharacter}
 			>
-				<div>
-					<div
-						class={`font-semiboldtext-gray-300 p-4`}
-					>
-						Add Character / Reauthenticate
-					</div>
+				<div class="font-semibold text-gray-300 p-4">
+					Add Character / Reauthenticate
 				</div>
 			</button>
+
+			<!-- Logout -->
 			<button
-				class={`flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors hover:bg-neutral-800 border border-neutral-800`}
+				class="flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors hover:bg-neutral-800 border border-neutral-800 w-fit"
 				on:click={logout}
 			>
-				<div>
-					<div
-						class={`font-semiboldtext-gray-300 p-4`}
-					>
-						Sign out
-					</div>
-				</div>
+				<div class="font-semibold text-gray-300 p-4">Sign out</div>
 			</button>
 		</div>
 	{/if}
+
 </div>

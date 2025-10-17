@@ -18,7 +18,7 @@ import { createEsiEndpointStore } from "./createEsiEndpointStore";
 /** @type {import("$lib/stores/createEsiEndpointStore").EsiEndpointStore<void, Response[]>} */
 export const factionsStore = createEsiEndpointStore(
     'factions',
-    (input)=>({ uri: `universe/factions` }),
+    ()=>({ uri: `universe/factions` }),
     undefined,
     20,
     false

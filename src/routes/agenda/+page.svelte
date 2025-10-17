@@ -1,0 +1,1 @@
+<iframe title="Liminal Order Agenda" src="https://calendar.google.com/calendar/embed?height=600&wkst=1&ctz=America%2FHalifax&showPrint=0&src=NmUzNWU1MTE0YjkzMTQ1YWE2YzYyMDA1MmQ3NGVlYzE3ZDNmZGIwMGM3ZTljM2VlNGE5MTMxMGUzNTYyMTIwZEBncm91cC5jYWxlbmRhci5nb29nbGUuY29t&color=%23f09300" style="border:solid 1px #777" width="800" height="600" frameborder="0" scrolling="no"></iframe>

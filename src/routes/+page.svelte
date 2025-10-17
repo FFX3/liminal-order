@@ -4,6 +4,7 @@
 	import { writable } from "svelte/store";
 	import { brokerFeeStore } from "$lib/stores/brokerFee";
 	import Portrait from "$lib/components/Portrait.svelte";
+	import { supabase } from "$lib/supabaseClient";
 
 	/** @type {import("svelte/store").Writable<number | null>} */
 	let selectedStationId = writable(null)
@@ -12,6 +13,8 @@
 
 	/** @type {import("$lib/stores/createEsiEndpointStore").SliceState<import("$lib/stores/brokerFee").BrokerFeeInfo>} */
 	let brokerFeeInfo = $state({ data: null, loading: true, error: null });
+
+    let { data: session } = await supabase.auth.getSession()
 
 	$effect(() => {
 		/** @type {import("svelte/store").Readable<import("$lib/stores/createEsiEndpointStore").SliceState<import("$lib/stores/brokerFee").BrokerFeeInfo>>} */
@@ -28,6 +31,10 @@
 	});
 
 </script>
+
+<pre>
+{JSON.stringify(session, null, 2)}
+</pre>
 
 {#if active_character_id }
 	<p><Portrait character_id={active_character_id} size={64} /></p>
