@@ -41,10 +41,10 @@ import { deleteWithPrefix } from "$lib/auth/utils";
 /**
  * Create a new ESI endpoint store that supports multiple characters.
  *
- * @template I, T
+ * @template I, T, R
  * @param {string} store_key
  * @param {Consumer<I>} consumer - Function that builds ESI URL from inputs
- * @param {(json: any) => T} [transform] - Optional transform from raw JSON to T
+ * @param {(json: R, inputs: I) => T} [transform] - Optional transform from raw JSON to T
  * @param {number} [cacheMinutes=60] - How long to keep items in cache
  * @param {boolean} [requiresAuth=true] - Whether this endpoint requires authentication
  * @param {"GET" | "POST"} [method=GET] - Whether this endpoint requires authentication
@@ -143,7 +143,6 @@ export function createEsiEndpointStore(store_key, consumer, transform, cacheMinu
   return {
     select: (inputs, character_id) => {
       const key = getCacheKey(inputs);
-      
       // Trigger fetch if needed (but don't await it)
       const currentState = get(store)[key];
       if (!currentState && !pendingFetches.has(key)) {
@@ -174,7 +173,7 @@ export function createEsiEndpointStore(store_key, consumer, transform, cacheMinu
  * @template I, T
  * @param {Consumer<I>} consumer - Function that builds ESI URL from inputs
  * @param {I} inputs
- * @param {(json: any) => T} [transform] - Optional transform from raw JSON to T
+ * @param {(json: any, inputs: I) => T} [transform] - Optional transform from raw JSON to T
  * @param {string} [jwt] - JWT token for authentication
  * @param {"GET" | "POST"} [method]
  * @returns {Promise<T>}
@@ -195,18 +194,20 @@ async function fetchData(consumer, inputs, transform, jwt, method) {
     }
 
     const res = await fetch(url, { headers, body: JSON.stringify(body), method });
+
     
     if (!res.ok) {
-      throw new Error(`ESI request failed: ${res.status}`);
+      throw new Error(`ESI request failed: ${res.status}\n Inputs: ${JSON.stringify(inputs)}`);
     }
 
     /** @type {T} */
     let json = await res.json();
-    if (transform) json = transform(json);
+    if (transform) json = transform(json, inputs);
 
     return json;
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : String(err);
+    console.error(`Error fetching ${url}: ${errorMessage}`)
     throw new Error(`Error fetching ${url}: ${errorMessage}`);
   }
 }

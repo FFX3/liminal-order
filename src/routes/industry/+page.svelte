@@ -4,10 +4,14 @@
 	import Portrait from "$lib/components/Portrait.svelte";
 	import { affiliationsStore } from "$lib/stores/affiliations";
 	import { characterIndustryJobsStore } from "$lib/stores/characterIndustryJobs";
+	import { characterPublicInfoStore } from "$lib/stores/characterPublicInfo";
 	import { corporationIndustryJobsStore } from "$lib/stores/corporationIndustryJobs";
 	import { esiStore } from "$lib/stores/esi";
-	import { derived } from "svelte/store";
+	import { JobQuerier } from "$lib/stores/models/IndustryJobQuerier";
+	import { derived, get } from "svelte/store";
     
+    let jobQuery = new JobQuerier()
+
     let character_ids = esiStore.characterIds()
     let characters = $esiStore.characters
 
@@ -145,9 +149,34 @@
         return unsub
     })
 
+    $character_ids.forEach(id=>{
+        jobQuery.subscribeToJobSlice(characterIndustryJobsStore.select({ character_id: id }))
+    })
+
+    $affiliations.data?.forEach(affiliation=>{
+        jobQuery.subscribeToJobSlice(corporationIndustryJobsStore.select({ 
+            character_id: affiliation.character_id,
+            corporation_id: affiliation.corporation_id
+        }))
+    })
+
+    let jobListPerInstaller = jobQuery.getJobListPerInstaller()
+
 </script>
 
-{#each $corporationJobsPerCharacter.data as corporationJobList }
+{#each Object.entries($jobListPerInstaller) as [character_id, jobs] }
+<Portrait size={64} character_id={parseInt(character_id)} />
+<h2>{get(characterPublicInfoStore.select({ character_id: parseInt(character_id)})).data?.name}</h2>
+    {#if jobs}
+        <Gantt data={jobs.map(job=>({ 
+            name: job.job_id.toString(),
+            start: new Date(job.start_date),
+            end: new Date(job.end_date)
+        }))} />
+    {/if}
+{/each}
+
+<!-- {#each $corporationJobsPerCharacter.data as corporationJobList }
 <div class="flex flex-horizontal">
     <CorporationIcon size={64} corporation_id={corporationJobList.corporation_id} />
     <Portrait size={64} character_id={corporationJobList.character_id} />
@@ -172,4 +201,4 @@
             end: new Date(job.end_date)
         }))} />
     {/if}
-{/each}
+{/each} -->

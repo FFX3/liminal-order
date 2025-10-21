@@ -89,9 +89,11 @@ export async function restoreEsi() {
         const refresh_token = getRefreshTokenFromEsiTokenData(authData.esiTokenData);
         const client_id = "72743549513a4d14a7a37102d468ae0c";
         const res = await fetch(`https://wwubrvsbuhzlpymjgjvw.supabase.co/functions/v1/refresh-token/?client_id=${client_id}&refresh_token=${refresh_token}`);
+        console.log("refresh response", res)
         const esiTokenData = (await res.json()).esiTokenData;
         jwt = esiTokenData.access_token;
         const parsed = parseJwt(jwt);
+        console.log("parsed new access token", parsed)
         character = extractCharacterInfo(parsed);
         expiresAt = extractExpiration(parsed);
         saveCharacterToStorage({

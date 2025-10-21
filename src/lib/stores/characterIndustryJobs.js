@@ -37,10 +37,12 @@ import { createEsiEndpointStore } from "./createEsiEndpointStore";
  * @property {number} character_id
  */
 
-/** @type {import("$lib/stores/createEsiEndpointStore").EsiEndpointStore<Input, Response>} */
+/** @type {import("$lib/stores/createEsiEndpointStore").EsiEndpointStore<Input, import("$lib/stores/models/IndustryJobQuerier").Job[]>}*/
 export const characterIndustryJobsStore = createEsiEndpointStore(
     'character_industry_jobs',
     (input)=>({ uri: `characters/${input.character_id}/industry/jobs`, character_id: input.character_id }),
-    undefined,
+    (/** @type {Response} */ res)=>{ 
+        return /** @type {import("$lib/stores/models/IndustryJobQuerier").Job[]} */(res)
+    },
     20
 );
