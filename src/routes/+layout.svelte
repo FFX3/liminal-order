@@ -12,7 +12,6 @@
 	let isAuthMissing = writable({ data: true, loading: true, error: "" })
 
 	onMount(async () => {
-		console.log("yo")
 		await initEsi();
 		await restoreEsi();
 		let { data: session } = await supabase.auth.getSession()
@@ -54,5 +53,6 @@
 </div>
 {:else}
 {@render children?.()}
+<div class="h-10"></div> <!-- Padding for EsiTokenInfo Component -->
 <EsiTokenInfo />
 {/if}

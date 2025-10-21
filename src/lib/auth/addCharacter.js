@@ -7,7 +7,8 @@ const SCOPES = [
   "esi-skills.read_skills.v1",
   "esi-markets.read_character_orders.v1",
   "esi-characters.read_standings.v1",
-  "esi-industry.read_character_jobs.v1"
+  "esi-industry.read_character_jobs.v1",
+  "esi-industry.read_corporation_jobs.v1"
 ].join(" ");
 
 /**
