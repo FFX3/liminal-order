@@ -1,4 +1,5 @@
 // src/lib/stores/esi.js
+import { extractCharacterInfo, extractExpiration, parseJwt } from "$lib/auth/utils";
 import { derived, get, writable } from "svelte/store";
 
 /**
@@ -10,8 +11,11 @@ import { derived, get, writable } from "svelte/store";
 /**
  * @typedef {Object} CharacterAuth
  * @property {Character} character
- * @property {string} jwt
+ * @property {string} access_token
  * @property {number} expires_at - Unix timestamp when JWT expires
+ * @property {string} refresh_token
+ * @property {string} owner_hash
+ * @property {number} character_id
  */
 
 /**
@@ -28,6 +32,12 @@ function createEsiStore() {
   });
 
   return {
+        /**
+     * Upsert all characters to Supabase
+     * @param {import('@supabase/supabase-js').SupabaseClient} supabase
+     * @returns {Promise<{success: number[], failed: number[]}>}
+     */
+
     subscribe,
 
     /** Helper to get all authenticated character IDs */
@@ -39,18 +49,16 @@ function createEsiStore() {
 
     /**
      * Add or update authentication for a character
-     * @param {string} jwt
-     * @param {Character} character
-     * @param {number} expires_at - Unix timestamp when JWT expires
+     * @param {CharacterAuth} characterAuth
      */
-    setCharacterAuth(jwt, character, expires_at) {
+    setCharacterAuth(characterAuth) {
       update(state => ({
         ...state,
         characters: {
           ...state.characters,
-          [character.id]: { jwt, character, expires_at }
+          [characterAuth.character_id]: characterAuth
         },
-        active_character_id: state.active_character_id ?? character.id
+        active_character_id: state.active_character_id ?? characterAuth.character_id
       }));
     },
 
@@ -98,7 +106,7 @@ function createEsiStore() {
       // Check if JWT is expired
       if (auth) {
         
-        return auth.jwt;
+        return auth.access_token;
       }
       return null;
     },

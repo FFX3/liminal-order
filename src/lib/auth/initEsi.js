@@ -5,12 +5,7 @@ import { parseJwt, extractCharacterInfo, extractExpiration, getAccessTokenFromEs
 
 const STORAGE_KEY = "esiCharacters";
 
-/**
- * @typedef {Object} StoredCharacterAuth
- * @property {string} esiTokenData - Raw ESI token data
- * @property {import("$lib/stores/esi").Character} character
- * @property {number} expires_at
- */
+
 
 /**
  * Initialize ESI state from URL hash (after SSO redirect)
@@ -44,20 +39,19 @@ export async function initEsi() {
     }
     
     // Handle ESI token
-    const jwt = authData.esiData.access_token;
-    const parsedJWT = parseJwt(jwt);
+    const access_token = authData.esiData.access_token;
+    const refresh_token = authData.esiData.refresh_token;
+    const parsedJWT = parseJwt(access_token);
     const character = extractCharacterInfo(parsedJWT);
-    const expiresAt = extractExpiration(parsedJWT);
+    const expires_at = extractExpiration(parsedJWT);
+
+    const characterAuth = { access_token, character, expires_at, refresh_token, owner_hash: character.owner, character_id: character.id }
 
     // Add to store
-    esiStore.setCharacterAuth(jwt, character, expiresAt);
+    esiStore.setCharacterAuth(characterAuth);
 
     // Persist to localStorage with other characters
-    saveCharacterToStorage({
-      esiTokenData: JSON.stringify(authData.esiData),
-      character,
-      expires_at: expiresAt
-    });
+    saveCharacterToStorage(characterAuth);
 
     // Optional: clean URL
     history.replaceState({}, "", window.location.pathname);
@@ -78,38 +72,35 @@ export async function restoreEsi() {
   let restoredCount = 0;
   let expiredCount = 0;
 
-  for (const [characterId, authData] of Object.entries(stored)) {
+  for (const [characterId, characterAuthData] of Object.entries(stored)) {
     try {
-      let jwt;
-      let character;
-      let expiresAt;
       // Check if token is expired
-      if (authData.expires_at <= now) {
+      if (characterAuthData.expires_at <= now) {
         console.log(`refreshing for char:${characterId}`);
-        const refresh_token = getRefreshTokenFromEsiTokenData(authData.esiTokenData);
         const client_id = "72743549513a4d14a7a37102d468ae0c";
-        const res = await fetch(`https://wwubrvsbuhzlpymjgjvw.supabase.co/functions/v1/refresh-token/?client_id=${client_id}&refresh_token=${refresh_token}`);
+        console.log("refresh token", characterAuthData.refresh_token)
+        const res = await fetch(`https://wwubrvsbuhzlpymjgjvw.supabase.co/functions/v1/refresh-token/?client_id=${client_id}&refresh_token=${characterAuthData.refresh_token}`);
         console.log("refresh response", res)
-        const esiTokenData = (await res.json()).esiTokenData;
-        jwt = esiTokenData.access_token;
-        const parsed = parseJwt(jwt);
-        console.log("parsed new access token", parsed)
-        character = extractCharacterInfo(parsed);
-        expiresAt = extractExpiration(parsed);
-        saveCharacterToStorage({
-          esiTokenData: JSON.stringify(esiTokenData),
-          character,
-          expires_at: expiresAt
-        });
+        const esiResponse = (await res.json()).esiResponse;
+        console.log("esiTokenData", esiResponse)
+        if(esiResponse.error) {
+          console.log(esiResponse.error_description)
+        } else {
+          const parsedJWT = parseJwt(esiResponse.access_token)
+          const expires_at = extractExpiration(parsedJWT)
+          const newCharacterAuthData = {
+            ...characterAuthData,
+            access_token: esiResponse.access_token,
+            refresh_token: esiResponse.refresh_token,
+            expires_at
+          }
+          saveCharacterToStorage(newCharacterAuthData);
+          esiStore.setCharacterAuth(newCharacterAuthData);
+        }
       } else {
-        console.log(`using local token for char:${characterId}`);
-        jwt = getAccessTokenFromEsiTokenData(authData.esiTokenData);
-        const parsed = parseJwt(jwt);
-        character = extractCharacterInfo(parsed);
-        expiresAt = extractExpiration(parsed);
+        esiStore.setCharacterAuth(characterAuthData);
       }
 
-      esiStore.setCharacterAuth(jwt, character, expiresAt);
       restoredCount++;
     } catch (err) {
       console.error(`Failed to restore character ${characterId}:`, err);
@@ -136,7 +127,7 @@ export function removeCharacterAuth(characterId) {
 
 /**
  * Get all stored characters
- * @returns {Record<string, StoredCharacterAuth>}
+ * @returns {Record<string, import("$lib/stores/esi").CharacterAuth>}
  */
 function getStoredCharacters() {
   try {
@@ -150,7 +141,7 @@ function getStoredCharacters() {
 
 /**
  * Save a character's auth data to localStorage 
- * @param {StoredCharacterAuth} authData 
+ * @param {import("$lib/stores/esi").CharacterAuth} authData 
  */
 function saveCharacterToStorage(authData) {
   try {

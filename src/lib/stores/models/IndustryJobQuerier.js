@@ -52,15 +52,21 @@ export class JobQuerier {
 
     /** 
      *  @returns {import("svelte/store").Readable<Record<number, Job[]>>}
+     *  @param {(arg0: Job)=>boolean} [predicate]
      */
-    getJobListPerInstaller() {
+    getJobListPerInstaller(predicate) {
         return readable(
             /** @type {Record<number, Job[]>} */ ({}), 
             ((set) => {
                 let unsubscribe = JobQuerier.getReadableFromWritableJobList(this.jobList).subscribe((value)=>{
                     set(value.reduce((carry, job)=>{
                         let installerJobList = carry[job.installer_id] ?? []
-                        installerJobList.push(job)
+                        if(predicate && !predicate(job)) {
+                            // skip job
+                        } else {
+                            
+                            installerJobList.push(job)
+                        }
                         carry[job.installer_id] = installerJobList
                         return carry
                     }, /** @type {Record<number, Job[]>} */({})))
@@ -101,11 +107,6 @@ export class JobQuerier {
         let currentJobsSlice = get(this.jobList)
         let newJobs = jobs.filter(job=>!currentJobsSlice.some(cj=>cj.job_id == job.job_id))
         this.jobList.set([...currentJobsSlice, ...newJobs])
-
-        console.log("input", jobs)
-        console.log("currentSlice", jobs)
-        console.log("filtered", [...currentJobsSlice, ...newJobs])
-        console.log("newSlice", get(this.jobList))
     }
 
     /** @param {import("svelte/store").Readable<{ data: Job[] | null, loading: boolean, error: Error | null}>} slice */

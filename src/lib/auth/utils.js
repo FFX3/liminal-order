@@ -9,13 +9,14 @@ export function parseJwt(token) {
 }
 
 /**
- * @param {{ sub: string; name: string; }} parsedJWT
- * @returns {{ id: number, name: string }}
+ * @param {{ sub: string; name: string; owner: string }} parsedJWT
+ * @returns {{ id: number, name: string, owner: string }}
  */
 export function extractCharacterInfo(parsedJWT) {
     return {
         id: Number(parsedJWT.sub.split(":")[2]),
-        name: parsedJWT.name
+        name: parsedJWT.name,
+        owner: parsedJWT.owner
     }
 }
 

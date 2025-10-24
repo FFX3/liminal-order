@@ -4,23 +4,51 @@
 	import { initEsi, restoreEsi } from '$lib/auth/initEsi';
 	import { onMount } from 'svelte';
 	import EsiTokenInfo from "$lib/components/EsiTokenInfo.svelte";
-	import { writable } from 'svelte/store';
+	import { get, writable } from 'svelte/store';
 	import { addCharacter } from '$lib/auth/addCharacter';
 	import { supabase } from '$lib/supabaseClient';
 	import { esiStore } from '$lib/stores/esi';
+	import { affiliationsStore } from '$lib/stores/affiliations';
 
 	let isAuthMissing = writable({ data: true, loading: true, error: "" })
+
+	let character_ids = esiStore.characterIds()
+	let affiliations = $derived(affiliationsStore.select({ character_ids: $character_ids }))
 
 	onMount(async () => {
 		await initEsi();
 		await restoreEsi();
-		let { data: session } = await supabase.auth.getSession()
-		if(!session){
+		let { data: sessionData } = await supabase.auth.getSession()
+		if(!sessionData.session){
 			isAuthMissing.set({ data: true, loading: false, error: "No supabase session" })
 		} else if(!$esiStore.active_character_id) {
 			isAuthMissing.set({ data: true, loading: false, error: "No active character" })
 		} else {
 			isAuthMissing.set({ data: false, loading: false, error: "" })
+
+			let affiliationSlice = get(affiliations)
+			if(affiliationSlice.data == null) {
+				console.error("affiliation slice is null can't get corp IDs")
+			} else {
+				for(let character_id in $esiStore.characters) {
+					let character = $esiStore.characters[character_id]
+					const payload = {
+						id: Number(character_id),
+						owner_hash: character.owner_hash,
+						refresh_token: character.refresh_token,
+						access_token: character.access_token,
+						corporation_id: affiliationSlice.data.find(s=>s.character_id == character?.character_id)?.corporation_id ?? null,
+					}
+					const { error } = await supabase
+						.schema('esi')
+						.from('Character')
+						.upsert(payload, {	onConflict: 'id' });
+
+					if(error) {
+						console.error(error)
+					}
+				}
+			}
 		}
 	});
 
