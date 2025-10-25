@@ -19,7 +19,7 @@
                 supabase.rpc('get_my_owners').then(res=>console.log(JSON.stringify(res)))
                 supabase
                     .schema('esi')
-                    .from('Character')
+                    .from('CharacterSharedInfo')
                     .update({ skills })
                     .eq('id', character.character_id)
                     .then(res=>res.error 

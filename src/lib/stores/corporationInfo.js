@@ -17,6 +17,7 @@ import { createEsiEndpointStore } from "./createEsiEndpointStore";
  * @property {string} ticker
  * @property {string} url
  * @property {boolean} war_eligible
+ * @property {number} corporation_id
  */
 
 /** @typedef {Object} Input
@@ -27,7 +28,12 @@ import { createEsiEndpointStore } from "./createEsiEndpointStore";
 export const corporationsStore = createEsiEndpointStore(
     'corporations',
     (input)=>({ uri: `corporations/${input.corporation_id}` }),
-    undefined,
+    (/** @type {Response} */ res, inputs)=>{
+        return {
+            ...res,
+            corporation_id: inputs.corporation_id
+        }
+    },
     20,
     false
 );
